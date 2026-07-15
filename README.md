@@ -22,5 +22,5 @@ Meu objetivo é aplicar conceitos teóricos de redes, segurança de endpoints e 
 
 ---
 ## 📬 Contato
-* **LinkedIn**: [Joao Vitor Duarte]((https://www.linkedin.com/in/jo%C3%A3o-vitor-duarte-de-faria-carvalho/))
+* **LinkedIn**: [Joao Vitor Duarte](https://www.linkedin.com/in/jo%C3%A3o-vitor-duarte-de-faria-carvalho)
 * **Email**: joao.carvalho1.profissional@gmail.com
