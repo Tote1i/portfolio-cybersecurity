@@ -93,6 +93,16 @@ Abaixo está o trecho do log bruto processado e indexado pelo Wazuh, demonstrand
 *   eventID: 4625: Código nativo do Windows para falhas de autenticação.
 *   severityValue: AUDIT_FAILURE: O sistema identificou e registrou a quebra de conformidade na tentativa de acesso.
 
+### 5. Mapeamento de Vetores e Defesas (MITRE ATT&CK - Fase 1)
+Abaixo está o mapeamento técnico das táticas e técnicas validadas localmente nesta primeira etapa do laboratório, conectando o comportamento simulado com a telemetria de defesa:
+
+| Tática MITRE | Técnica / Sub-técnica ID | Nome da Técnica | Comportamento Simulado | Detecção / Telemetria (Blue Team) |
+| :--- | :--- | :--- | :--- | :--- |
+| Credential Access | **T1110.001** | Brute Force: Password Guessing | Tentativa de adivinhar credenciais localmente na tela de bloqueio do Windows. | Coleta do Log de Segurança (Event ID 4625), Logon Tipo 2. Alerta Wazuh Regra 60122. |
+| Impact | **T1531** | Account Access Removal | Tentativas sucessivas de autenticação inválida gerando potencial bloqueio de conta. | Monitoramento de limites de tentativas de login via políticas de grupo locais (GPO). |
+
+---
+
 ---
 
 ## 🎯 Fase 2: Simulação de Ataques Ativos (Red Team) e Detecção Avançada
@@ -113,10 +123,23 @@ Para cada ataque simulado, o monitoramento será refinado através do mapeamento
 
 ---
 
-## 📊 Mapeamento Global e Compliance Regulatório
-Toda a atividade registrada no laboratório (tanto local quanto as simulações de rede) é correlacionada pelo motor do SIEM com padrões de mercado:
-*   **MITRE ATT&CK:** Mapeamento direto com as táticas de **Initial Access** (Acesso Inicial - T1110 / Brute Force), *Privilege Escalation* (Elevação de Privilégio) e *Impact* (T1531).
-*   **Conformidade de Dados:** Validação automática de conformidade com os requisitos **PCI DSS (10.2.4 e 10.2.5)** e diretrizes de auditoria da **GDPR / LGPD** para controle restrito de acessos.
+### 3. Mapeamento de Ataques Planejados (MITRE ATT&CK - Fase 2)
+Este é o plano de engenharia de detecção estruturado para a simulação de adversários utilizando a infraestrutura do Kali Linux:
+
+| Tática MITRE | Técnica / Sub-técnica ID | Nome da Técnica | Ação Proposta (Red Team) | Detecção Esperada (Blue Team) |
+| :--- | :--- | :--- | :--- | :--- |
+| Reconnaissance | **T1595.001** | Active Scanning: IP Addresses | Varredura de portas com `nmap` para descobrir serviços ativos na rede. | Monitoramento de conexões de rede e regras de firewall para identificar múltiplos "knocks" em portas fechadas. |
+| Credential Access | **T1110.002** | Brute Force: Password Cracking | Ataque de força bruta remoto simulado com `hydra` contra serviços RDP/SMB. | Monitoramento do Event ID 4625 com Logon Tipo 3 (Network). Correlação de múltiplas falhas vindas do mesmo IP externo. |
+| Execution | **T1204.002** | User Execution: Malicious File | Execução do executável/payload malicioso gerado pelo Metasploit no Windows. | Logs do **Sysmon (Event ID 1)** rastreando a árvore de processos (`parent_process`) e hashes de arquivos suspeitos. |
+
+---
+
+---
+
+## 📊 Compliance Regulatório
+O motor do Wazuh correlaciona os eventos automaticamente com padrões e normas internacionais:
+*   **PCI DSS (10.2.4 e 10.2.5):** Exigência de auditoria para todas as tentativas de acesso inválidas e controle de autenticação.
+*   **GDPR / LGPD (IV_32.2):** Monitoramento contínuo de acessos para garantir a resiliência e integridade dos dados contra acessos não autorizados.
 
 ---
 
