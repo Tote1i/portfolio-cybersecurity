@@ -1,26 +1,41 @@
-# 🛡️ Laboratório de Defesa Cibernética: Implementação e Monitoramento com Wazuh SIEM
+# 🛡️ Laboratório de Engenharia de Detecção: Implementação, Auditoria e Análise de Ataques com Wazuh SIEM
 
 ## 📝 Descrição do Projeto
-Este projeto documenta a criação de um laboratório prático de monitoramento de segurança utilizando o **Wazuh SIEM**. O objetivo foi implementar uma estrutura centralizada para coleta, análise e correlação de eventos de segurança de endpoints em tempo real, mapeando ameaças diretamente com frameworks internacionais de segurança.
+Este projeto documenta a criação de um homelab avançado de segurança cibernética utilizando o **Wazuh SIEM**. O objetivo é construir um ambiente controlado para engenharia de detecção, análise de telemetria de endpoints e validação de regras de segurança baseadas em cenários reais de ameaças.
+
+O laboratório foi estruturado estrategicamente em fases evolutivas, simulando o amadurecimento de um Centro de Operações de Segurança (SOC) corporativo:
+*   **Fase 1:** Centralização de Logs, Auditoria de Identidade e Baseline de Telemetria Local.
+*   **Fase 2 (Em Desenvolvimento):** Simulação de Ataques Ativos (Red Team) com Kali Linux e Engenharia de Detecção Avançada (Blue Team).
+
+---
+
+## 🎯 Objetivos de Aprendizado e Prática
+A implementação deste laboratório visa consolidar conceitos práticos fundamentais para o mercado de Cybersecurity, alinhados com matrizes globais de conhecimento (como os objetivos de gerenciamento de vetores de ataque, ferramentas de segurança e mitigação da certificação CompTIA Security+):
+*   Compreensão de vetores de ataque, atores de ameaça e suas motivações.
+*   Análise técnica de logs e telemetria de sistemas operacionais.
+*   Configuração e deploy de agentes SIEM/XDR em ambientes híbridos.
+*   Mapeamento de comportamentos maliciosos utilizando a matriz **MITRE ATT&CK**.
+*   Auditoria de conformidade regulatória (PCI DSS, GDPR/LGPD).
 
 ---
 
 ## 🏗️ Arquitetura do Laboratório
-O ambiente foi estruturado de forma híbrida utilizando virtualização e sistemas físicos para simular um cenário real de monitoramento corporativo:
+O ambiente utiliza uma estrutura híbrida para simular a segmentação de redes corporativas:
 
-*   **SIEM Manager (Servidor):** Wazuh Manager hospedado em uma Máquina Virtual (Linux) através do Oracle VirtualBox (IP: `192.168.1.23`).
-*   **Endpoint Monitorado (Agente):** Máquina física rodando **Windows 11 Home** (IP: `192.168.1.15`), configurada com o agente leve do Wazuh para envio de logs.
+*   **SIEM Manager (Blue Team Server):** Instalação central do Wazuh hospedada em uma Máquina Virtual Linux (Ubuntu Server) via Oracle VirtualBox (IP: `192.168.1.23`), configurada em modo *Bridge*.
+*   **Endpoint Monitorado (Agente Local):** Máquina física operando **Windows 11 Home** (IP: `192.168.1.15`), atuando como o alvo principal de monitoramento e auditoria.
+*   **Atacante (Red Team Server - Fase 2):** Máquina Virtual dedicada rodando **Kali Linux**, simulando um agente de ameaça externo ou persistido na rede local.
 
 ---
 
-## 🚀 Passo a Passo da Implementação
+## 🚀 Fase 1: Centralização de Logs, Auditoria Local e Baseline
 
-### 1. Preparação do Servidor
-*   Configuração da máquina virtual no VirtualBox utilizando placas de rede em modo *Bridge* para permitir a comunicação direta entre a rede física e o servidor SIEM.
-*   Instalação e validação do ecossistema central do Wazuh (Indexer, Server e Dashboard).
+### 1. Preparação do Servidor e Infraestrutura
+*   Configuração da interface de rede da máquina virtual em modo *Bridge* para garantir visibilidade e roteamento direto na sub-rede física.
+*   Deploy e validação do ecossistema central do Wazuh (Indexer, Server e Dashboard).
 
-### 2. Implantação do Agente no Windows
-A instalação no endpoint físico foi realizada de forma silenciosa via terminal administrativo utilizando o **PowerShell**:
+### 2. Implantação do Agente no Endpoint Windows
+A distribuição e provisionamento do agente no endpoint físico foram automatizados via terminal administrativo usando **PowerShell**:
 
 ```powershell
 # Download e instalação silenciosa do agente apontando para o servidor manager
@@ -29,25 +44,12 @@ Invoke-WebRequest -Uri https://packages.wazuh.com/4.x/windows/wazuh-agent-4.9.2-
 # Inicialização do serviço do agente
 NET START WazuhSvc
 ```
----
+### 3. Simulação de Ameaça Local: Abuso de Autenticação (PoC)
+Para homologar a integridade do canal de logs e validar a resposta do SIEM, simulou-se um comportamento suspeito de Erros de Autenticação Interativa.
+*   O teste Prático: Bloqueio de sessão local (Windows + L) seguido pela geração intencional de 4 falhas consecutivas de login, seguidas por uma autenticação bem-sucedida.
+*   Resultados no Dashboard: O motor do Wazuh capturou em tempo real as falhas (Evento de Auditoria Nativo do Windows 4625) mapeando-as sob a Regra ID 60122 (Nível 5), seguido pela elevação de privilégios interativos após o acesso legítimo (Regra ID 60110 (Nível 8)).
 
-## 🔍 Simulação de Ataque e Análise de Logs (PoC)
-
-Para validar a eficácia das regras de detecção do SIEM, foi realizada uma simulação de **Ataque de Força Bruta / Erros de Autenticação Interativa**.
-
-### O Teste Prático
-1. A tela do endpoint Windows foi bloqueada (`Windows + L`).
-2. Foram geradas sequencialmente **4 falhas de logon intencionais** com credenciais incorretas, seguidas por um logon com sucesso.
-
-### Resultados no Dashboard do SIEM
-O comportamento disparou imediatamente alarmes no painel de **Threat Hunting** do Wazuh, gerando a correlação automática dos seguintes eventos estruturados:
-
-*   **Logon Failure (Regra ID: 60122 | Nível 5):** Captura exata do evento de auditoria `4625` do Windows.
-*   **User Account Changed / Special Privileges (Regra ID: 60110 | Nível 8):** Alerta gerado assim que o usuário legítimo reconectou e recebeu privilégios interativos pós-falhas.
-
----
-
-## 🔬 Análise Técnica do Evento (JSON do Alerta)
+### 4. Análise Técnica do Evento (JSON do Alerta)
 Abaixo está o trecho do log bruto processado e indexado pelo Wazuh, demonstrando como o SIEM normaliza os dados do Windows para os analistas de SOC:
 
 ```json
@@ -87,21 +89,40 @@ Abaixo está o trecho do log bruto processado e indexado pelo Wazuh, demonstrand
 }
 ```
 ### Indicadores Técnicos Extraídos:
-*   **`logonType: 2`**: Confirma que a tentativa foi um **Logon Interativo** (feito localmente na máquina).
-*   **`eventID: 4625`**: Código nativo do Windows para falhas de autenticação.
-*   **`severityValue: AUDIT_FAILURE`**: O sistema identificou e registrou a quebra de conformidade na tentativa de acesso.
+*   logonType: 2: Confirma que a tentativa foi um Logon Interativo (feito localmente na máquina).
+*   eventID: 4625: Código nativo do Windows para falhas de autenticação.
+*   severityValue: AUDIT_FAILURE: O sistema identificou e registrou a quebra de conformidade na tentativa de acesso.
 
 ---
 
-## 📊 Mapeamento e Compliance Regulatório
-O motor do Wazuh correlacionou o evento automaticamente com matrizes globais de segurança da informação:
-*   **MITRE ATT&CK:** Identificado nas táticas de **Initial Access** (Acesso Inicial), *Privilege Escalation* (Elevação de Privilégio) e *Impact*.
-*   **Conformidade de Dados:** Mapeado sob as normas internacionais **PCI DSS (10.2.4 e 10.2.5)** e **GDPR (IV_32.2)** para controle e auditoria de acessos inválidos.
+## 🎯 Fase 2: Simulação de Ataques Ativos (Red Team) e Detecção Avançada
+
+> ⚠️ **Nota de Escopo:** Esta fase está em desenvolvimento ativo no homelab. Os cenários abaixo mapeiam o planejamento de testes de intrusão internos para validação das regras de correlação de rede do Wazuh.
+
+### 1. Planejamento de Vetores de Ataque (Kali Linux)
+As simulações serão executadas a partir do host atacante baseado em **Kali Linux**, focando nos seguintes objetivos táticos:
+*   **Reconhecimento Ativo (Port Scanning):** Execução de varreduras de portas e serviços via `nmap` para identificar portas abertas (ex: RDP 3389, SMB 445) no endpoint alvo.
+*   **Ataque de Força Bruta de Rede (Credential Stuffing):** Tentativas automatizadas de login remoto via protocolo RDP ou SMB utilizando a ferramenta `hydra`.
+*   **Entrega de Payload e Persistência:** Geração de um agente de acesso reverso (backdoor) via `msfvenom` (Metasploit) para validar a capacidade do XDR do Wazuh em detectar binários não assinados em execução.
+
+### 2. Engenharia de Detecção Esperada (Blue Team)
+Para cada ataque simulado, o monitoramento será refinado através do mapeamento de logs específicos:
+*   Detecção de tráfego anômalo e picos de conexão na mesma porta em curto intervalo de tempo.
+*   Monitoramento do Event ID `4625` do Windows com `logonType: 3` (Logon de Rede), diferenciando a força bruta remota do erro interativo local mapeado na Fase 1.
+*   Integração do **Sysmon** (System Monitor) no endpoint para auditoria de criação de processos (`Event ID 1`) causados por payloads gerados no Kali.
+
+---
+
+## 📊 Mapeamento Global e Compliance Regulatório
+Toda a atividade registrada no laboratório (tanto local quanto as simulações de rede) é correlacionada pelo motor do SIEM com padrões de mercado:
+*   **MITRE ATT&CK:** Mapeamento direto com as táticas de **Initial Access** (Acesso Inicial - T1110 / Brute Force), *Privilege Escalation* (Elevação de Privilégio) e *Impact* (T1531).
+*   **Conformidade de Dados:** Validação automática de conformidade com os requisitos **PCI DSS (10.2.4 e 10.2.5)** e diretrizes de auditoria da **GDPR / LGPD** para controle restrito de acessos.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 *   **Wazuh SIEM v4.9.2** (Manager, Indexer & Dashboard)
-*   **Windows 11 Home** (Endpoint / Auditoria de Eventos)
-*   **Oracle VirtualBox** (Ambiente de Virtualização)
-*   **PowerShell** (Automação de deploy e gerenciamento de serviços)
+*   **Windows 11 Home** (Endpoint Monitorado / Auditoria de Eventos)
+*   **Kali Linux** (Plataforma de Simulação de Adversários / Red Team)
+*   **Oracle VirtualBox** (Hipervisor / Virtualização do Ambiente)
+*   **PowerShell** (Automação de deploys e gerência de serviços locais)
