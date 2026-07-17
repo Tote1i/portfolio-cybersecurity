@@ -1,26 +1,39 @@
-# Portfolio de Cibersegurança — Blue Team / SOC 🛡️
+# Portfólio de Cibersegurança — Blue Team / SOC
 
-Bem-vindo(a) ao meu portfólio de projetos práticos voltados para Segurança Defensiva, Monitoramento e Resposta a Incidentes. Atualmente, estou expandindo meus conhecimentos práticos e me preparando para a certificação **CompTIA Security+ SY0-701**.
+## Sobre
 
-Meu objetivo é aplicar conceitos teóricos de redes, segurança de endpoints e análise de ameaças em cenários reais para agregar valor a equipes de SOC (Security Operations Center).
+Analista de Cibersegurança em formação, com 2 anos de experiência prática em suporte técnico e infraestrutura, atualmente cursando Tecnólogo em Cibersegurança e me preparando para a certificação **CompTIA Security+ (SY0-701)**.
 
----
+Este repositório reúne os laboratórios e exercícios práticos que venho desenvolvendo para consolidar competências de Operações de Segurança (SOC) — triagem de alertas, análise de logs e telemetria, e resposta a incidentes.
 
-## 🛠️ Projetos em Destaque
+Buscando oportunidade júnior ou estágio remoto na área de Segurança da Informação.
 
-| Projeto | Descrição | Status | Links |
-| :--- | :--- | :---: | :---: |
-| **01. Home Lab de Detecção (Wazuh)** | Implantação de SIEM Wazuh, monitoramento de endpoint Windows e simulação de ataques (Brute Force, alterações de registro). | ⏳ Em Progresso | [Acessar Pasta](./01-homelab-wazuh/) |
-| **02. Investigações Práticas (SOC)** | Análise e triagem de alertas reais de Phishing e Malware usando LetsDefend e CyberDefenders. | 📅 Planejado | [Acessar Pasta](./02-investigacoes-letsdefend/) |
-| **03. Script Python: Analisador de Logs** | Automação em Python para analisar arquivos de log de autenticação e identificar ataques de força bruta. | 📅 Planejado | [Acessar Pasta](./03-script-log-analyzer/) |
+📄 [Currículo](LINK_DO_CURRICULO) · 💼 [LinkedIn](https://www.linkedin.com/in/SEU-USUARIO) · ✉️ SEU-EMAIL@gmail.com
 
 ---
 
-## 🛡️ Certificações & Estudos
-* **CompTIA Security+ SY0-701** — (Em preparação)
-* **SOC Level 1** — TryHackMe (Em andamento)
+## Projetos
+
+| Projeto | Descrição | Tecnologias | Status |
+|---|---|---|---|
+| [01. Home Lab de Detecção (Wazuh)](./01-homelab-wazuh/) | Implantação de SIEM Wazuh, monitoramento de endpoint Windows, triagem de alertas de autenticação com mapeamento MITRE ATT&CK | Wazuh, Windows, VirtualBox, MITRE ATT&CK | Em andamento |
+| [02. Investigações Práticas (SOC)](./02-investigacoes-letsdefend/) | Triagem de alertas de phishing e malware em plataformas de simulação SOC | LetsDefend, CyberDefenders | Planejado |
+| [03. Analisador de Logs (Python)](./03-script-log-analyzer/) | Script para análise de logs de autenticação e identificação de padrões de força bruta | Python | Planejado |
+
+*Status atualizado conforme o progresso — cada pasta contém o README detalhado do respectivo projeto.*
 
 ---
-## 📬 Contato
-* **LinkedIn**: [Joao Vitor Duarte](https://www.linkedin.com/in/jo%C3%A3o-vitor-duarte-de-faria-carvalho)
-* **Email**: joao.carvalho1.profissional@gmail.com
+
+## Estudos e Certificações
+
+- CompTIA Security+ (SY0-701) — em preparação
+- SOC Level 1 — TryHackMe (em andamento)
+- Security Operations Center (SOC) — Cisco Networking Academy
+- Python for Cybersecurity — Infosec
+
+---
+
+## Contato
+
+- **LinkedIn:** [linkedin.com/in/SEU-USUARIO](https://www.linkedin.com/in/SEU-USUARIO)
+- **E-mail:** SEU-EMAIL@gmail.com
