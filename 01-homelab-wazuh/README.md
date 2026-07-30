@@ -19,6 +19,8 @@ O laboratório está dividido em duas fases:
 
 Ambiente virtualizado em Oracle VirtualBox, rede em modo Bridge para permitir comunicação direta entre VM e host físico.
 
+![Diagrama de arquitetura do homelab](./evidence/architecture-diagram.svg)
+
 ---
 
 ## Fase 1 — Centralização de logs e auditoria local
@@ -42,6 +44,61 @@ NET START WazuhSvc
 
 ![Agente ativo no Wazuh](./evidence/01-active-agent.png)
 *Painel de Agentes confirmando status `active`, SO (Windows 11 Home) e versão do agente instalada.*
+
+### 2.1 Configuração do agente (`ossec.conf`, sanitizado)
+
+A configuração parte do template padrão distribuído pelo Wazuh para agentes Windows. Os campos efetivamente personalizados para este ambiente foram o endereço do manager, o nome do agente e o enrollment automático; os demais módulos (FIM, SCA, syscollector) permanecem nos valores recomendados por padrão.
+
+```xml
+<ossec_config>
+
+  <client>
+    <server>
+      <address>192.168.1.30</address>
+      <port>1514</port>
+      <protocol>tcp</protocol>
+    </server>
+    <config-profile>windows, windows10</config-profile>
+    <crypto_method>aes</crypto_method>
+    <notify_time>10</notify_time>
+    <time-reconnect>60</time-reconnect>
+    <auto_restart>yes</auto_restart>
+    <enrollment>
+      <enabled>yes</enabled>
+      <agent_name>endpoint-01</agent_name>
+      <groups>default</groups>
+    </enrollment>
+  </client>
+
+  <!-- Coleta de eventos de segurança do Windows, com filtro de ruído
+       recomendado pela documentação oficial do Wazuh -->
+  <localfile>
+    <location>Security</location>
+    <log_format>eventchannel</log_format>
+    <query>Event/System[EventID != 5145 and EventID != 5156 and EventID != 5447 and
+      EventID != 4656 and EventID != 4658 and EventID != 4663 and EventID != 4660 and
+      EventID != 4670 and EventID != 4690 and EventID != 4703 and EventID != 4907 and
+      EventID != 5152 and EventID != 5157]</query>
+  </localfile>
+
+  <!-- File Integrity Monitoring — habilitado, valores padrão -->
+  <syscheck>
+    <disabled>no</disabled>
+    <frequency>43200</frequency>
+    ...
+  </syscheck>
+
+  <!-- Security Configuration Assessment — habilitado, scan a cada 12h -->
+  <sca>
+    <enabled>yes</enabled>
+    <scan_on_start>yes</scan_on_start>
+    <interval>12h</interval>
+  </sca>
+
+</ossec_config>
+```
+
+**O que foi omitido/sanitizado:** blocos completos de `syscheck` (listas extensas de diretórios e chaves de registro monitoradas, padrão do template) e os módulos `cis-cat` e `osquery`, que permanecem desabilitados (`disabled: yes`) e não foram utilizados neste laboratório. O arquivo completo não traz credenciais nem segredos — é composto majoritariamente por caminhos e parâmetros públicos do próprio produto.
 
 ### 3. Cenário de teste: falhas de autenticação local
 
