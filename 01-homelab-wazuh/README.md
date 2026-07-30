@@ -14,7 +14,7 @@ O laboratório está dividido em duas fases:
 | Componente | Função | SO / Ferramenta | IP |
 |---|---|---|---|
 | SIEM Manager | Servidor central (Indexer, Server, Dashboard) | Ubuntu Server + Wazuh 4.9.2 | 192.168.1.23 |
-| Endpoint monitorado | Alvo de auditoria e coleta de eventos | Windows 11 Home | 192.168.1.15 |
+| Endpoint monitorado | Alvo de auditoria e coleta de eventos | Windows 11 Home | 192.168.1.18 |
 | Host de ataque (Fase 2) | Simulação de agente de ameaça | Kali Linux | a definir |
 
 Ambiente virtualizado em Oracle VirtualBox, rede em modo Bridge para permitir comunicação direta entre VM e host físico.
@@ -38,7 +38,10 @@ Invoke-WebRequest -Uri https://packages.wazuh.com/4.x/windows/wazuh-agent-4.9.2-
 NET START WazuhSvc
 ```
 
-Validação: agente aparece como "ativo" no dashboard e eventos de segurança do Windows passam a ser indexados.
+**Validação:** agente registrado e ativo no manager, versão 4.9.2, comunicando com o node Wazuh.
+
+![Agente ativo no Wazuh](./evidence/01-active-agent.png)
+*Painel de Agentes confirmando status `active`, SO (Windows 11 Home) e versão do agente instalada.*
 
 ### 3. Cenário de teste: falhas de autenticação local
 
@@ -46,44 +49,24 @@ Validação: agente aparece como "ativo" no dashboard e eventos de segurança do
 
 **Objetivo do teste:** validar que o pipeline de coleta (Agent → Manager → Indexer → Dashboard) captura e classifica corretamente eventos de autenticação nativos do Windows.
 
-**Resultado:** as 4 falhas foram capturadas como Event ID 4625 (Logon Failure) e classificadas pela regra Wazuh 60122 (nível 5). O logon bem-sucedido subsequente gerou Event ID 4624, classificado pela regra 60110 (nível 8, por seguir uma sequência de falhas).
+**Resultado:** 4 eventos de falha (Event ID 4625) capturados e classificados pela regra Wazuh 60122, nível 5.
 
-### 4. Alerta bruto (exemplo)
+![Lista de alertas 4625](./evidence/02-alert-4625-list.png)
+*Dashboard filtrado por `data.win.system.eventID: 4625`, mostrando o total de 4 alertas de falha de autenticação no período, sem falsos-negativos e sem eventos de sucesso indevidamente classificados como falha.*
 
-```json
-{
-  "_index": "wazuh-alerts-4.x-2026.07.17",
-  "agent": {
-    "ip": "192.168.1.15",
-    "name": "endpoint-01",
-    "id": "001"
-  },
-  "data": {
-    "win": {
-      "eventdata": {
-        "logonType": "2",
-        "ipAddress": "127.0.0.1",
-        "status": "0xc000006d"
-      },
-      "system": {
-        "eventID": "4625",
-        "channel": "Security",
-        "severityValue": "AUDIT_FAILURE"
-      }
-    }
-  },
-  "rule": {
-    "level": 5,
-    "description": "Logon Failure - Unknown user or bad password",
-    "id": "60122"
-  }
-}
-```
+### 4. Análise técnica do alerta (dados brutos)
+
+Detalhamento do evento indexado, direto do Discover do Wazuh:
+
+![Detalhe do evento — eventdata](./evidence/03a-alert-4625-eventdata.png)
+
+![Detalhe do evento — regra e classificação](./evidence/03b-alert-4625-rule.png)
 
 **Indicadores extraídos:**
 - `logonType: 2` — logon interativo, executado localmente na máquina (não é acesso remoto).
-- `eventID: 4625` — código nativo do Windows para falha de autenticação.
-- `status: 0xc000006d` — senha ou usuário incorretos.
+- `eventID: 4625` / `status: 0xc000006d` — falha de autenticação por senha ou usuário incorretos.
+- `logonProcessName: User32`, `processName: svchost.exe` — consistente com tela de logon padrão do Windows, sem indício de ferramenta externa de ataque.
+- `rule.level: 5` — severidade baixa, compatível com um evento isolado e não crítico.
 
 ### 5. Análise do analista
 
@@ -91,7 +74,13 @@ Este é um evento de baixa severidade e alta previsibilidade: falha de autentica
 
 Se o volume de falhas fosse maior, viesse de IP externo, ou envolvesse `logonType: 3` (logon de rede) ou `logonType: 10` (RDP), a classificação mudaria para investigação ativa de possível brute-force (ver Fase 2). Não há ação de resposta necessária neste caso — o cenário serve para validar que o canal de telemetria funciona corretamente antes de introduzir cenários mais complexos.
 
-### 6. Mapeamento MITRE ATT&CK — Fase 1
+### 6. Observação sobre o mapeamento MITRE do Wazuh
+
+O print de detalhe do evento mostra que a própria regra 60122 do Wazuh mapeia este alerta para `rule.mitre.id: T1531` (Account Access Removal / tática Impact). Esse mapeamento é o **default do ruleset do Wazuh**, não uma classificação que eu atribuí manualmente — e, na minha avaliação, é impreciso para este cenário: T1531 descreve um adversário **removendo o acesso** de uma conta legítima (ex: trocar credenciais para bloquear a vítima), o que não é o que ocorre numa simples falha de senha digitada errada pelo próprio usuário.
+
+Uma classificação tecnicamente mais correta para esse padrão de evento seria `T1110.001 — Brute Force: Password Guessing`, usada na tabela de mapeamento abaixo. Optei por manter e destacar essa divergência no README porque considero importante, como analista, não aceitar cegamente a rotulagem automática de uma ferramenta — o mapeamento MITRE de um SIEM é um ponto de partida para triagem, não a palavra final.
+
+### 7. Mapeamento MITRE ATT&CK — Fase 1 (avaliação do analista)
 
 | Tática | Técnica | Comportamento simulado | Telemetria de detecção |
 |---|---|---|---|
@@ -127,12 +116,6 @@ Integração planejada: Sysmon no endpoint Windows para auditoria de criação d
 2. Provisionar endpoint Windows (VM ou físico) e instalar o Wazuh Agent, apontando para o IP do manager.
 3. Confirmar no dashboard que o agente está ativo e eventos de segurança estão sendo indexados.
 4. Gerar os cenários de teste descritos na Fase 1 e validar a classificação dos alertas.
-
----
-
-## Evidências
-
-*(adicionar aqui: prints do dashboard do Wazuh mostrando os alertas classificados, print da lista de agentes ativos)*
 
 ---
 
