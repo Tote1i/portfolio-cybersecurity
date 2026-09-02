@@ -19,7 +19,7 @@ O laboratório está dividido em duas fases:
 
 Ambiente virtualizado em Oracle VirtualBox, rede em modo Bridge para permitir comunicação direta entre VM e host físico.
 
-![Diagrama de arquitetura do homelab](./evidence/architecture-diagram.svg)
+![Diagrama de arquitetura do homelab](./evidence/fase01/architecture-diagram.svg)
 
 ---
 
@@ -42,7 +42,7 @@ NET START WazuhSvc
 
 **Validação:** agente registrado e ativo no manager, versão 4.9.2, comunicando com o node Wazuh.
 
-![Agente ativo no Wazuh](./evidence/01-active-agent.png)
+![Agente ativo no Wazuh](./evidence/fase01/01-active-agent.png)
 *Painel de Agentes confirmando status `active`, SO (Windows 11 Home) e versão do agente instalada.*
 
 ### 2.1 Configuração do agente (`ossec.conf`, sanitizado)
@@ -108,16 +108,16 @@ A configuração parte do template padrão distribuído pelo Wazuh para agentes 
 
 **Resultado:** 4 eventos de falha (Event ID 4625) capturados e classificados pela regra Wazuh 60122, nível 5.
 
-![Lista de alertas 4625](./evidence/02-alert-4625-list.png)
+![Lista de alertas 4625](./evidence/fase01/02-alert-4625-list.png)
 *Dashboard filtrado por `data.win.system.eventID: 4625`, mostrando o total de 4 alertas de falha de autenticação no período, sem falsos-negativos e sem eventos de sucesso indevidamente classificados como falha.*
 
 ### 4. Análise técnica do alerta (dados brutos)
 
 Detalhamento do evento indexado, direto do Discover do Wazuh:
 
-![Detalhe do evento — eventdata](./evidence/03a-alert-4625-eventdata.png)
+![Detalhe do evento — eventdata](./evidence/fase01/03a-alert-4625-eventdata.png)
 
-![Detalhe do evento — regra e classificação](./evidence/03b-alert-4625-rule.png)
+![Detalhe do evento — regra e classificação](./evidence/fase01/03b-alert-4625-rule.png)
 
 **Indicadores extraídos:**
 - `logonType: 2` — logon interativo, executado localmente na máquina (não é acesso remoto).
