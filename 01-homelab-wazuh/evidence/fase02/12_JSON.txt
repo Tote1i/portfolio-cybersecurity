@@ -1,0 +1,93 @@
+{
+  "_index": "wazuh-alerts-4.x-2026.08.20",
+  "_id": "j-2VHqAB7KSPdjjLdGmM",
+  "_score": null,
+  "_source": {
+    "input": {
+      "type": "log"
+    },
+    "agent": {
+      "ip": "192.168.1.21",
+      "name": "Ubuntu-Server",
+      "id": "002"
+    },
+    "manager": {
+      "name": "Wazuh-Manager"
+    },
+    "data": {
+      "audit": {
+        "syscall": "59",
+        "gid": "1000",
+        "fsgid": "1000",
+        "session": "3",
+        "pid": "15969",
+        "suid": "1000",
+        "type": "SYSCALL",
+        "uid": "1000",
+        "egid": "1000",
+        "exe": "/tmp/payload_linux.elf",
+        "file": {
+          "inode": "157",
+          "mode": "0100775",
+          "name": "/tmp/payload_linux.elf"
+        },
+        "sgid": "1000",
+        "id": "729",
+        "key": "execution_detect",
+        "auid": "1000",
+        "execve": {
+          "argc": "1",
+          "a0": "/tmp/payload_linux.elf"
+        },
+        "euid": "1000",
+        "command": "payload_linux.e",
+        "ppid": "2212",
+        "fsuid": "1000",
+        "exit": "0",
+        "cwd": "/home/vboxuser",
+        "success": "yes",
+        "tty": "pts0",
+        "arch": "c000003e"
+      }
+    },
+    "rule": {
+      "firedtimes": 1,
+      "mail": false,
+      "level": 7,
+      "description": "Auditd: Execution of payload binary detected",
+      "groups": [
+        "local",
+        "syslog",
+        "sshd"
+      ],
+      "mitre": {
+        "technique": [
+          "Unix Shell"
+        ],
+        "id": [
+          "T1059.004"
+        ],
+        "tactic": [
+          "Execution"
+        ]
+      },
+      "id": "100003"
+    },
+    "location": "/var/log/audit/audit.log",
+    "decoder": {
+      "parent": "auditd",
+      "name": "auditd"
+    },
+    "id": "1787219504.30026285",
+    "full_log": "type=SYSCALL msg=audit(1787219503.276:729): arch=c000003e syscall=59 success=yes exit=0 a0=5cb929d7c760 a1=5cb929def9a0 a2=5cb929db4440 a3=21 items=1 ppid=2212 pid=15969 auid=1000 uid=1000 gid=1000 euid=1000 suid=1000 fsuid=1000 egid=1000 sgid=1000 fsgid=1000 tty=pts0 ses=3 comm=\"payload_linux.e\" exe=\"/tmp/payload_linux.elf\" subj=unconfined key=\"execution_detect\"\u001dARCH=x86_64 SYSCALL=execve AUID=\"vboxuser\" UID=\"vboxuser\" GID=\"vboxuser\" EUID=\"vboxuser\" SUID=\"vboxuser\" FSUID=\"vboxuser\" EGID=\"vboxuser\" SGID=\"vboxuser\" FSGID=\"vboxuser\" type=EXECVE msg=audit(1787219503.276:729): argc=1 a0=\"/tmp/payload_linux.elf\" type=CWD msg=audit(1787219503.276:729): cwd=\"/home/vboxuser\" type=PATH msg=audit(1787219503.276:729): item=0 name=\"/tmp/payload_linux.elf\" inode=157 dev=00:21 mode=0100775 ouid=1000 ogid=1000 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0\u001dOUID=\"vboxuser\" OGID=\"vboxuser\" type=PROCTITLE msg=audit(1787219503.276:729): proctitle=\"/tmp/payload_linux.elf\"",
+    "timestamp": "2026-08-20T09:51:44.449+0000"
+  },
+  "fields": {
+    "timestamp": [
+      "2026-08-20T09:51:44.449Z"
+    ]
+  },
+  "sort": [
+    1787219504449
+  ]
+}
