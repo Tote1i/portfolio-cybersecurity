@@ -7,15 +7,15 @@ Homelab de segurança para prática de engenharia de detecção, coleta de telem
 O laboratório está dividido em duas fases:
 
 - **Fase 1 (concluída):** centralização de logs, auditoria de autenticação e baseline de telemetria em endpoint Windows.
-- **Fase 2 (em andamento):** simulação de ataques de rede com Kali Linux e validação de regras de correlação.
+- **Fase 2 (concluída):** simulação de ataques de rede com Kali Linux e validação de regras de correlação.
 
 ## Arquitetura
 
 | Componente | Função | SO / Ferramenta | IP |
 |---|---|---|---|
 | SIEM Manager | Servidor central (Indexer, Server, Dashboard) | Ubuntu Server + Wazuh 4.9.2 | 192.168.1.23 |
-| Endpoint monitorado | Alvo de auditoria e coleta de eventos | Windows 11 Home | 192.168.1.18 |
-| Host de ataque (Fase 2) | Simulação de agente de ameaça | Kali Linux | a definir |
+| Endpoint monitorado | Alvo de auditoria e coleta de eventos | Windows 11 Home / Ubuntu Server | 192.168.1.18 / 192.168.1.21 |
+| Host de ataque (Fase 2) | Simulação de agente de ameaça | Kali Linux | 192.168.1.31 |
 
 Ambiente virtualizado em Oracle VirtualBox, rede em modo Bridge para permitir comunicação direta entre VM e host físico.
 
@@ -246,7 +246,7 @@ Antes de considerar a regra funcional, o evento foi testado manualmente com o ut
 
 ![Alerta na aba Events, regra 100003 nível 7](./evidence/fase02/11_wazuh_events_alert.png)
 
-Alerta bruto indexado (JSON completo em [`evidence/12_JSON.txt`](./evidence/fase02/12_JSON.txt)):
+Alerta bruto indexado (JSON completo em [`evidence/fase02/12_JSON.txt`](./evidence/fase02/12_JSON.txt)):
 
 ```json
 {
