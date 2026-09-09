@@ -18,7 +18,7 @@ O laboratório está dividido em duas fases:
 | Host de ataque (Fase 2) | Simulação de agente de ameaça | Kali Linux | 192.168.1.31 |
 
 Ambiente virtualizado em Oracle VirtualBox, rede em modo Bridge para permitir comunicação direta entre VM e host físico.
-
+ 
 ![Diagrama de arquitetura do homelab](./evidence/fase01/architecture-diagram.svg)
 
 ---
