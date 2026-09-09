@@ -6,9 +6,9 @@ Analista de Cibersegurança em formação, com 2 anos de experiência prática e
 
 Este repositório reúne os laboratórios e exercícios práticos que venho desenvolvendo para consolidar competências de Operações de Segurança (SOC) — triagem de alertas, análise de logs e telemetria, e resposta a incidentes.
 
-Buscando oportunidade júnior ou estágio remoto na área de Segurança da Informação.
+Buscando oportunidade júnior ou estágio na área de Segurança da Informação.
 
-📄 [Currículo](LINK_DO_CURRICULO) · 💼 [LinkedIn](https://www.linkedin.com/in/SEU-USUARIO) · ✉️ SEU-EMAIL@gmail.com
+📄 [Currículo](LINK_DO_CURRICULO) · 💼 [LinkedIn](www.linkedin.com/in/joao-vitor-duarte-de-faria-carvalho) · ✉️ SEU-EMAIL@gmail.com
 
 ---
 
@@ -16,7 +16,7 @@ Buscando oportunidade júnior ou estágio remoto na área de Segurança da Infor
 
 | Projeto | Descrição | Tecnologias | Status |
 |---|---|---|---|
-| [01. Home Lab de Detecção (Wazuh)](./01-homelab-wazuh/) | Implantação de SIEM Wazuh, monitoramento de endpoint Windows, triagem de alertas de autenticação com mapeamento MITRE ATT&CK | Wazuh, Windows, VirtualBox, MITRE ATT&CK | Em andamento |
+| [01. Home Lab de Detecção (Wazuh)](./01-homelab-wazuh/) | Implantação de SIEM Wazuh, monitoramento de endpoint Windows e Ubuntu Server, triagem de alertas de autenticação com mapeamento MITRE ATT&CK e simulação de ataque com Kali Linux| Wazuh, Windows, Ubuntu Server, Kali Linux, VirtualBox, MITRE ATT&CK | Concluído |
 | [02. Investigações Práticas (SOC)](./02-investigacoes-letsdefend/) | Triagem de alertas de phishing e malware em plataformas de simulação SOC | LetsDefend, CyberDefenders | Planejado |
 | [03. Analisador de Logs (Python)](./03-script-log-analyzer/) | Script para análise de logs de autenticação e identificação de padrões de força bruta | Python | Planejado |
 
@@ -35,5 +35,5 @@ Buscando oportunidade júnior ou estágio remoto na área de Segurança da Infor
 
 ## Contato
 
-- **LinkedIn:** [linkedin.com/in/SEU-USUARIO](https://www.linkedin.com/in/SEU-USUARIO)
+- **LinkedIn:** [linkedin.com/in/joao-vitor-duarte-de-faria-carvalho](www.linkedin.com/in/joao-vitor-duarte-de-faria-carvalho)
 - **E-mail:** SEU-EMAIL@gmail.com
