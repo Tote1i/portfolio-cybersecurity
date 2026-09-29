@@ -2,13 +2,13 @@
 
 ## Sobre
 
-Analista de Cibersegurança em formação, com 2 anos de experiência prática em suporte técnico e infraestrutura, atualmente cursando Tecnólogo em Cibersegurança e me preparando para a certificação **CompTIA Security+ (SY0-701)**.
+Analista de Cibersegurança em formação, com 2 anos de experiência prática em suporte técnico, atualmente cursando Tecnólogo em Cibersegurança e me preparando para a certificação **CompTIA Security+ (SY0-701)**.
 
 Este repositório reúne os laboratórios e exercícios práticos que venho desenvolvendo para consolidar competências de Operações de Segurança (SOC) — triagem de alertas, análise de logs e telemetria, e resposta a incidentes.
 
 Buscando oportunidade júnior ou estágio na área de Segurança da Informação.
 
-📄 [Currículo](LINK_DO_CURRICULO) · 💼 [LinkedIn](www.linkedin.com/in/joao-vitor-duarte-de-faria-carvalho) · ✉️ SEU-EMAIL@gmail.com
+ ·  [LinkedIn](www.linkedin.com/in/joao-vitor-duarte-de-faria-carvalho)
 
 ---
 
@@ -28,12 +28,13 @@ Buscando oportunidade júnior ou estágio na área de Segurança da Informação
 
 - CompTIA Security+ (SY0-701) — em preparação
 - SOC Level 1 — TryHackMe (em andamento)
-- Security Operations Center (SOC) — Cisco Networking Academy
+- Introdução à Cibersegurança | Conceitos Básicos de Redes | Dispositivos de Rede e Configuração Inicial | Segurança de Endpoint | Defesa de Rede | Gerenciamento de Ameaças Cibernéticas | Security Operations Center — Cisco Networking Academy
 - Python for Cybersecurity — Infosec
+- Certificado de Segurança Cibernética — Google
 
 ---
 
 ## Contato
 
 - **LinkedIn:** [linkedin.com/in/joao-vitor-duarte-de-faria-carvalho](www.linkedin.com/in/joao-vitor-duarte-de-faria-carvalho)
-- **E-mail:** SEU-EMAIL@gmail.com
+- **E-mail:** weasd99843@gmail.com
