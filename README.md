@@ -17,7 +17,7 @@ Buscando oportunidade júnior ou estágio na área de Segurança da Informação
 | Projeto | Descrição | Tecnologias | Status |
 |---|---|---|---|
 | [01. Home Lab de Detecção (Wazuh)](./01-homelab-wazuh/) | Implantação de SIEM Wazuh, monitoramento de endpoint Windows e Ubuntu Server, triagem de alertas de autenticação com mapeamento MITRE ATT&CK e simulação de ataque com Kali Linux| Wazuh, Windows, Ubuntu Server, Kali Linux, VirtualBox, MITRE ATT&CK | Concluído |
-| [02. Investigações Práticas (SOC)](./02-investigacoes-letsdefend/) | Triagem de alertas de phishing e malware em plataformas de simulação SOC | LetsDefend, CyberDefenders | Planejado |
+| [02. Investigações Práticas (SOC)](./02-investigacoes-letsdefend/) | Triagem de alertas de phishing e malware em plataformas de simulação SOC | LetsDefend, CyberDefenders | Em andamento |
 | [03. Analisador de Logs (Python)](./03-script-log-analyzer/) | Script para análise de logs de autenticação e identificação de padrões de força bruta | Python | Planejado |
 
 *Status atualizado conforme o progresso — cada pasta contém o README detalhado do respectivo projeto.*
